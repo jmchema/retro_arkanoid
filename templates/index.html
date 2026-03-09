@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Arkanoid</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="game-card" aria-labelledby="game-title">
+            <header class="hud">
+                <div>
+                    <p class="hud-label">Score</p>
+                    <p class="hud-value" id="score">0</p>
+                </div>
+                <div class="hud-center">
+                    <h1 id="game-title">Retro Arkanoid</h1>
+                    <p class="hud-subtitle">Break every brick. Keep the last ball alive.</p>
+                </div>
+                <div>
+                    <p class="hud-label">Lives</p>
+                    <p class="hud-value" id="lives">3</p>
+                </div>
+            </header>
+
+            <section class="stage-wrap">
+                <canvas id="gameCanvas" width="900" height="600" aria-label="Arkanoid game area"></canvas>
+                <div class="overlay" id="overlay">
+                    <p class="overlay-kicker">Ready?</p>
+                    <h2 id="overlayTitle">Press Space to Start</h2>
+                    <p id="overlayMessage">Use left and right arrows to move the paddle.</p>
+                    <button id="restartButton" type="button">Start Game</button>
+                </div>
+            </section>
+
+            <footer class="controls">
+                <p>Controls: <span>Left / Right arrows</span> or <span>A / D</span></p>
+                <p>Restart anytime with <span>R</span></p>
+            </footer>
+        </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+</body>
+</html>
