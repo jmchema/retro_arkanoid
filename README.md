@@ -1,23 +1,19 @@
 # Retro Arkanoid with Flask
 
-Small Arkanoid MVP built with Flask and an HTML5 canvas frontend. Flask serves the page and static assets; the gameplay loop runs in the browser for smooth controls and collision handling.
+Arkanoid web app built with Flask. The base game runs on an HTML5 canvas, and the `codex/usuarios` branch adds Google sign-in, SQLite persistence, saved runs, and per-user high scores.
 
 ## Requirements
 
 - Windows with `pyenv-win` available as `pyenv`
-- A Python `3.12.x` runtime installed in `pyenv`
+- Python `3.12.7`
+- A Google OAuth client configured for a web application
 
 ## Setup with pyenv-win
 
-If you do not have Python 3.12.7 installed yet:
+Install and select the local Python version:
 
 ```powershell
 pyenv install 3.12.7
-```
-
-Set the project-local version:
-
-```powershell
 pyenv local 3.12.7
 ```
 
@@ -35,7 +31,22 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Run the app:
+## Google OAuth configuration
+
+Copy `.env.example` to `.env` and set real values for:
+
+- `SECRET_KEY`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `DATABASE_URL` optional, defaults to local SQLite in `instance/arkanoid.db`
+
+For Google Cloud Console, configure an OAuth web client with a redirect URI like:
+
+```text
+http://127.0.0.1:5000/auth/google/callback
+```
+
+## Run the app
 
 ```powershell
 python app.py
@@ -43,18 +54,10 @@ python app.py
 
 Then open [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-## Controls
+## Gameplay and persistence
 
-- Left Arrow / `A`: move left
-- Right Arrow / `D`: move right
-- Space: launch or resume
-- `R`: reset the match
-
-## MVP behavior
-
-- Fixed brick grid
-- 3 lives
-- Score increases during the current session only
-- Win screen when all bricks are destroyed
-- Game over screen when all lives are lost
-- No backend persistence and no leaderboard in this version
+- Users must authenticate with Google before they can play.
+- Every finished run is saved in SQLite.
+- The best score is shown as soon as the user enters the session.
+- The sidebar also shows the most recent saved runs.
+- Controls: Left Arrow or `A`, Right Arrow or `D`, `Space`, and `R`.

@@ -7,40 +7,128 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <main class="page-shell">
-        <section class="game-card" aria-labelledby="game-title">
-            <header class="hud">
-                <div>
-                    <p class="hud-label">Score</p>
-                    <p class="hud-value" id="score">0</p>
-                </div>
-                <div class="hud-center">
-                    <h1 id="game-title">Retro Arkanoid</h1>
-                    <p class="hud-subtitle">Break every brick. Keep the last ball alive.</p>
-                </div>
-                <div>
-                    <p class="hud-label">Lives</p>
-                    <p class="hud-value" id="lives">3</p>
-                </div>
-            </header>
+    {% with flashes = get_flashed_messages(with_categories=true) %}
+        {% if flashes %}
+            <div class="flash-stack" role="status" aria-live="polite">
+                {% for category, message in flashes %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
-            <section class="stage-wrap">
-                <canvas id="gameCanvas" width="900" height="600" aria-label="Arkanoid game area"></canvas>
-                <div class="overlay" id="overlay">
-                    <p class="overlay-kicker">Ready?</p>
-                    <h2 id="overlayTitle">Press Space to Start</h2>
-                    <p id="overlayMessage">Use left and right arrows to move the paddle.</p>
-                    <button id="restartButton" type="button">Start Game</button>
-                </div>
+    {% if not authenticated %}
+        <main class="auth-shell">
+            <section class="auth-card">
+                <p class="eyebrow">Arkanoid Online</p>
+                <h1>Sign in to save every run</h1>
+                <p class="auth-copy">
+                    Continue with Google to unlock saved matches, personal high score tracking,
+                    and your recent run history.
+                </p>
+                {% if google_enabled %}
+                    <a class="google-button" href="{{ url_for('login_google') }}">Continue with Google</a>
+                {% else %}
+                    <p class="auth-warning">
+                        Google OAuth is not configured yet. Add the environment variables from
+                        <code>.env.example</code> to enable login.
+                    </p>
+                {% endif %}
             </section>
+        </main>
+    {% else %}
+        <main class="page-shell">
+            <section class="game-layout">
+                <aside class="profile-card">
+                    <div class="profile-head">
+                        {% if user.avatar_url %}
+                            <img class="avatar" src="{{ user.avatar_url }}" alt="{{ user.display_name }} avatar">
+                        {% else %}
+                            <div class="avatar avatar-fallback">{{ user.display_name[:1] }}</div>
+                        {% endif %}
+                        <div>
+                            <p class="eyebrow">Logged in as</p>
+                            <h2>{{ user.display_name }}</h2>
+                            <p class="profile-email">{{ user.email }}</p>
+                        </div>
+                    </div>
 
-            <footer class="controls">
-                <p>Controls: <span>Left / Right arrows</span> or <span>A / D</span></p>
-                <p>Restart anytime with <span>R</span></p>
-            </footer>
-        </section>
-    </main>
+                    <div class="stats-grid">
+                        <article class="stat-card">
+                            <p class="hud-label">Best Score</p>
+                            <p class="hud-value" id="maxScore">{{ max_score }}</p>
+                        </article>
+                        <article class="stat-card">
+                            <p class="hud-label">Saved Runs</p>
+                            <p class="hud-value" id="savedRunsCount">{{ total_games_count }}</p>
+                        </article>
+                    </div>
 
-    <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+                    <section class="history-panel">
+                        <div class="history-header">
+                            <h3>Recent Runs</h3>
+                            <form action="{{ url_for('logout') }}" method="post">
+                                <button class="ghost-button" type="submit">Log out</button>
+                            </form>
+                        </div>
+                        <ul id="historyList" class="history-list">
+                            {% for game in recent_games %}
+                                <li>
+                                    <span>{{ game.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
+                                    <strong>{{ game.score }}</strong>
+                                    <em>{{ "Win" if game.won else "Lose" }}</em>
+                                </li>
+                            {% else %}
+                                <li class="history-empty">No saved runs yet. Finish a match to create your history.</li>
+                            {% endfor %}
+                        </ul>
+                    </section>
+                </aside>
+
+                <section class="game-card" aria-labelledby="game-title">
+                    <header class="hud">
+                        <div>
+                            <p class="hud-label">Score</p>
+                            <p class="hud-value" id="score">0</p>
+                        </div>
+                        <div class="hud-center">
+                            <h1 id="game-title">Retro Arkanoid</h1>
+                            <p class="hud-subtitle">Break every brick. Every completed run is saved to your account.</p>
+                        </div>
+                        <div>
+                            <p class="hud-label">Lives</p>
+                            <p class="hud-value" id="lives">3</p>
+                        </div>
+                    </header>
+
+                    <section class="stage-wrap">
+                        <canvas id="gameCanvas" width="900" height="600" aria-label="Arkanoid game area"></canvas>
+                        <div class="overlay" id="overlay">
+                            <p class="overlay-kicker">Ready?</p>
+                            <h2 id="overlayTitle">Press Space to Start</h2>
+                            <p id="overlayMessage">Use left and right arrows to move the paddle.</p>
+                            <button id="restartButton" type="button">Start Game</button>
+                        </div>
+                    </section>
+
+                    <footer class="controls">
+                        <p>Controls: <span>Left / Right arrows</span> or <span>A / D</span></p>
+                        <p>Restart anytime with <span>R</span></p>
+                    </footer>
+                </section>
+            </section>
+        </main>
+
+        <script>
+            window.ARKANOID_BOOTSTRAP = {{ {
+                "authenticated": true,
+                "maxScore": max_score,
+                "totalGamesCount": total_games_count,
+                "recentGames": recent_games_data,
+                "saveGameUrl": url_for("save_game")
+            } | tojson }};
+        </script>
+        <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+    {% endif %}
 </body>
 </html>
