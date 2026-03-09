@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,17 +21,17 @@
         <main class="auth-shell">
             <section class="auth-card">
                 <p class="eyebrow">Arkanoid Online</p>
-                <h1>Sign in to save every run</h1>
+                <h1>Inicia sesion para guardar cada partida</h1>
                 <p class="auth-copy">
-                    Continue with Google to unlock saved matches, personal high score tracking,
-                    and your recent run history.
+                    Continua con Google para desbloquear tus partidas guardadas, el seguimiento de tu
+                    puntuacion maxima y el historial de tus ultimas sesiones.
                 </p>
                 {% if google_enabled %}
-                    <a class="google-button" href="{{ url_for('login_google') }}">Continue with Google</a>
+                    <a class="google-button" href="{{ url_for('login_google') }}">Continuar con Google</a>
                 {% else %}
                     <p class="auth-warning">
-                        Google OAuth is not configured yet. Add the environment variables from
-                        <code>.env.example</code> to enable login.
+                        La autenticacion con Google todavia no esta configurada. Añade las variables de entorno de
+                        <code>.env.example</code> para activar el acceso.
                     </p>
                 {% endif %}
             </section>
@@ -42,12 +42,12 @@
                 <aside class="profile-card">
                     <div class="profile-head">
                         {% if user.avatar_url %}
-                            <img class="avatar" src="{{ user.avatar_url }}" alt="{{ user.display_name }} avatar">
+                            <img class="avatar" src="{{ user.avatar_url }}" alt="Avatar de {{ user.display_name }}">
                         {% else %}
                             <div class="avatar avatar-fallback">{{ user.display_name[:1] }}</div>
                         {% endif %}
                         <div>
-                            <p class="eyebrow">Logged in as</p>
+                            <p class="eyebrow">Sesion iniciada como</p>
                             <h2>{{ user.display_name }}</h2>
                             <p class="profile-email">{{ user.email }}</p>
                         </div>
@@ -55,20 +55,20 @@
 
                     <div class="stats-grid">
                         <article class="stat-card">
-                            <p class="hud-label">Best Score</p>
+                            <p class="hud-label">Puntuacion maxima</p>
                             <p class="hud-value" id="maxScore">{{ max_score }}</p>
                         </article>
                         <article class="stat-card">
-                            <p class="hud-label">Saved Runs</p>
+                            <p class="hud-label">Partidas guardadas</p>
                             <p class="hud-value" id="savedRunsCount">{{ total_games_count }}</p>
                         </article>
                     </div>
 
                     <section class="history-panel">
                         <div class="history-header">
-                            <h3>Recent Runs</h3>
+                            <h3>Ultimas partidas</h3>
                             <form action="{{ url_for('logout') }}" method="post">
-                                <button class="ghost-button" type="submit">Log out</button>
+                                <button class="ghost-button" type="submit">Cerrar sesion</button>
                             </form>
                         </div>
                         <ul id="historyList" class="history-list">
@@ -76,10 +76,10 @@
                                 <li>
                                     <span>{{ game.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
                                     <strong>{{ game.score }}</strong>
-                                    <em>{{ "Win" if game.won else "Lose" }}</em>
+                                    <em>{{ "Victoria" if game.won else "Derrota" }}</em>
                                 </li>
                             {% else %}
-                                <li class="history-empty">No saved runs yet. Finish a match to create your history.</li>
+                                <li class="history-empty">Todavia no hay partidas guardadas. Termina una para crear tu historial.</li>
                             {% endfor %}
                         </ul>
                     </section>
@@ -88,32 +88,32 @@
                 <section class="game-card" aria-labelledby="game-title">
                     <header class="hud">
                         <div>
-                            <p class="hud-label">Score</p>
+                            <p class="hud-label">Puntuacion</p>
                             <p class="hud-value" id="score">0</p>
                         </div>
                         <div class="hud-center">
                             <h1 id="game-title">Retro Arkanoid</h1>
-                            <p class="hud-subtitle">Break every brick. Every completed run is saved to your account.</p>
+                            <p class="hud-subtitle">Rompe todos los bloques. Cada partida completada se guarda en tu cuenta.</p>
                         </div>
                         <div>
-                            <p class="hud-label">Lives</p>
+                            <p class="hud-label">Vidas</p>
                             <p class="hud-value" id="lives">3</p>
                         </div>
                     </header>
 
                     <section class="stage-wrap">
-                        <canvas id="gameCanvas" width="900" height="600" aria-label="Arkanoid game area"></canvas>
+                        <canvas id="gameCanvas" width="900" height="600" aria-label="Zona de juego de Arkanoid"></canvas>
                         <div class="overlay" id="overlay">
-                            <p class="overlay-kicker">Ready?</p>
-                            <h2 id="overlayTitle">Press Space to Start</h2>
-                            <p id="overlayMessage">Use left and right arrows to move the paddle.</p>
-                            <button id="restartButton" type="button">Start Game</button>
+                            <p class="overlay-kicker">Listo</p>
+                            <h2 id="overlayTitle">Pulsa Espacio para empezar</h2>
+                            <p id="overlayMessage">Usa las flechas izquierda y derecha para mover la barra.</p>
+                            <button id="restartButton" type="button">Empezar partida</button>
                         </div>
                     </section>
 
                     <footer class="controls">
-                        <p>Controls: <span>Left / Right arrows</span> or <span>A / D</span></p>
-                        <p>Restart anytime with <span>R</span></p>
+                        <p>Controles: <span>Flechas izquierda y derecha</span> o <span>A / D</span></p>
+                        <p>Reinicia cuando quieras con <span>R</span></p>
                     </footer>
                 </section>
             </section>

@@ -1,7 +1,7 @@
 const bootstrap = window.ARKANOID_BOOTSTRAP;
 
 if (!bootstrap || !bootstrap.authenticated) {
-    // The login screen has no game canvas on purpose.
+    // La pantalla de acceso no necesita canvas.
 } else {
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
@@ -96,11 +96,11 @@ if (!bootstrap || !bootstrap.authenticated) {
         savedRunsCountElement.textContent = String(state.totalGamesCount);
     }
 
-    function showOverlay(title, message, kicker = "Paused") {
+    function showOverlay(title, message, kicker = "Pausa") {
         overlayTitle.textContent = title;
         overlayMessage.textContent = message;
         overlayKicker.textContent = kicker;
-        restartButton.textContent = state.started ? "Play Again" : "Start Game";
+        restartButton.textContent = state.started ? "Jugar otra vez" : "Empezar partida";
         overlay.classList.remove("hidden");
     }
 
@@ -165,7 +165,7 @@ if (!bootstrap || !bootstrap.authenticated) {
         ctx.fillStyle = "rgba(255,255,255,0.16)";
         ctx.font = "bold 16px Consolas";
         ctx.textAlign = "center";
-        ctx.fillText("SPACE TO LAUNCH", canvas.width / 2, canvas.height - 110);
+        ctx.fillText("PULSA ESPACIO PARA LANZAR", canvas.width / 2, canvas.height - 110);
     }
 
     function draw() {
@@ -263,7 +263,7 @@ if (!bootstrap || !bootstrap.authenticated) {
             updateHud();
             prependHistoryItem(payload);
         } catch (error) {
-            console.error("Could not save game", error);
+            console.error("No se ha podido guardar la partida", error);
         }
     }
 
@@ -274,7 +274,7 @@ if (!bootstrap || !bootstrap.authenticated) {
         }
 
         const item = document.createElement("li");
-        const outcome = payload.won ? "Win" : "Lose";
+        const outcome = payload.won ? "Victoria" : "Derrota";
         item.innerHTML = `<span>${payload.created_at}</span><strong>${payload.score}</strong><em>${outcome}</em>`;
         historyList.prepend(item);
 
@@ -287,7 +287,7 @@ if (!bootstrap || !bootstrap.authenticated) {
     function handleWin() {
         state.running = false;
         state.won = true;
-        showOverlay("You Win!", `Final score: ${state.score}. Press R or use the button to play again.`, "Victory");
+        showOverlay("Has ganado", `Puntuacion final: ${state.score}. Pulsa R o usa el boton para volver a jugar.`, "Victoria");
         persistScore(true);
     }
 
@@ -309,14 +309,14 @@ if (!bootstrap || !bootstrap.authenticated) {
 
         if (state.lives <= 0) {
             state.running = false;
-            showOverlay("Game Over", `You scored ${state.score} points. Press R to try again.`, "Defeat");
+            showOverlay("Fin de la partida", `Has conseguido ${state.score} puntos. Pulsa R para intentarlo de nuevo.`, "Derrota");
             persistScore(false);
             return;
         }
 
         state.running = false;
         resetBallAndPaddle();
-        showOverlay("Ball Lost", `You still have ${state.lives} lives. Press Space to continue.`, "Retry");
+        showOverlay("Has perdido la bola", `Todavia te quedan ${state.lives} vidas. Pulsa Espacio para continuar.`, "Reintento");
     }
 
     function updateBall() {
@@ -353,9 +353,9 @@ if (!bootstrap || !bootstrap.authenticated) {
         resetBallAndPaddle();
         updateHud();
         showOverlay(
-            "Press Space to Start",
-            "Use left and right arrows to move the paddle.",
-            "Ready?"
+            "Pulsa Espacio para empezar",
+            "Usa las flechas izquierda y derecha para mover la barra.",
+            "Listo"
         );
         draw();
     }

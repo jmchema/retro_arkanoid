@@ -123,7 +123,7 @@ def create_app() -> Flask:
         if g.current_user:
             return redirect(url_for("index"))
         if not google_enabled():
-            flash("Google OAuth is not configured yet.", "error")
+            flash("La autenticacion con Google todavia no esta configurada.", "error")
             return redirect(url_for("index"))
 
         redirect_uri = url_for("auth_google_callback", _external=True)
@@ -132,11 +132,11 @@ def create_app() -> Flask:
     @app.get("/auth/google/callback")
     def auth_google_callback():
         if request.args.get("error"):
-            flash("Google sign-in was cancelled or failed.", "error")
+            flash("El inicio de sesion con Google se ha cancelado o ha fallado.", "error")
             return redirect(url_for("index"))
 
         if not google_enabled():
-            flash("Google OAuth is not configured yet.", "error")
+            flash("La autenticacion con Google todavia no esta configurada.", "error")
             return redirect(url_for("index"))
 
         try:
@@ -145,14 +145,14 @@ def create_app() -> Flask:
             if not userinfo:
                 userinfo = oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo").json()
         except Exception:
-            flash("Unable to complete Google sign-in.", "error")
+            flash("No se ha podido completar el inicio de sesion con Google.", "error")
             return redirect(url_for("index"))
 
         google_sub = userinfo.get("sub")
         email = userinfo.get("email")
         display_name = userinfo.get("name") or email
         if not google_sub or not email:
-            flash("Google did not return the required account details.", "error")
+            flash("Google no ha devuelto los datos de cuenta necesarios.", "error")
             return redirect(url_for("index"))
 
         user = User.query.filter_by(google_sub=google_sub).first()
