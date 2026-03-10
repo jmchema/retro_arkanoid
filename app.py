@@ -1,4 +1,4 @@
-import os
+﻿import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -51,6 +51,10 @@ def create_app() -> Flask:
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-change-me")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", f"sqlite:///{default_db_path.as_posix()}")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    app.config["BASE_URL"] = os.getenv("BASE_URL", "").rstrip("/")
+    app.config["HOST"] = os.getenv("HOST", "0.0.0.0")
+    app.config["PORT"] = int(os.getenv("PORT", "5000"))
+    app.config["DEBUG"] = os.getenv("FLASK_DEBUG", "1") == "1"
 
     db.init_app(app)
     oauth.init_app(app)
@@ -76,6 +80,11 @@ def create_app() -> Flask:
 
     def google_enabled() -> bool:
         return "google" in oauth._registry
+
+    def build_google_redirect_uri() -> str:
+        if app.config["BASE_URL"]:
+            return f"{app.config['BASE_URL']}{url_for('auth_google_callback')}"
+        return url_for("auth_google_callback", _external=True)
 
     def build_home_context():
         user = g.current_user
@@ -126,8 +135,7 @@ def create_app() -> Flask:
             flash("La autenticacion con Google todavia no esta configurada.", "error")
             return redirect(url_for("index"))
 
-        redirect_uri = url_for("auth_google_callback", _external=True)
-        return oauth.google.authorize_redirect(redirect_uri)
+        return oauth.google.authorize_redirect(build_google_redirect_uri())
 
     @app.get("/auth/google/callback")
     def auth_google_callback():
@@ -218,4 +226,4 @@ app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host=app.config["HOST"], port=app.config["PORT"], debug=app.config["DEBUG"])

@@ -1,63 +1,85 @@
-# Retro Arkanoid with Flask
+﻿# Retro Arkanoid with Flask
 
-Arkanoid web app built with Flask. The base game runs on an HTML5 canvas, and the `codex/usuarios` branch adds Google sign-in, SQLite persistence, saved runs, and per-user high scores.
+Aplicacion web de Arkanoid construida con Flask. El juego se ejecuta en un canvas HTML5 y esta rama añade acceso con Google, persistencia en SQLite y soporte para jugar desde otros equipos de tu red local.
 
-## Requirements
+## Requisitos
 
-- Windows with `pyenv-win` available as `pyenv`
+- Windows con `pyenv-win` disponible como `pyenv`
 - Python `3.12.7`
-- A Google OAuth client configured for a web application
+- Un cliente OAuth de Google configurado como aplicacion web
 
-## Setup with pyenv-win
+## Configuracion con pyenv-win
 
-Install and select the local Python version:
+Instala y selecciona la version local de Python:
 
 ```powershell
 pyenv install 3.12.7
 pyenv local 3.12.7
 ```
 
-Create and activate a virtual environment:
+Crea y activa el entorno virtual:
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-Install dependencies:
+Instala las dependencias:
 
 ```powershell
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## Google OAuth configuration
+## Configuracion de Google OAuth
 
-Copy `.env.example` to `.env` and set real values for:
+Copia `.env.example` a `.env` y rellena estos valores:
 
 - `SECRET_KEY`
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
-- `DATABASE_URL` optional, defaults to local SQLite in `instance/arkanoid.db`
+- `DATABASE_URL` opcional; por defecto usa SQLite local en `instance/arkanoid.db`
+- `HOST` con `0.0.0.0`
+- `PORT` con `5000`
+- `BASE_URL` con la IP local del PC anfitrion, por ejemplo `http://192.168.1.25:5000`
 
-For Google Cloud Console, configure an OAuth web client with a redirect URI like:
+En Google Cloud Console debes anadir los redirect URI que vayas a usar. Como minimo:
 
 ```text
 http://127.0.0.1:5000/auth/google/callback
+http://TU_IP_LOCAL:5000/auth/google/callback
 ```
 
-## Run the app
+## Ejecutar la aplicacion en la red local
+
+Inicia la app con:
 
 ```powershell
 python app.py
 ```
 
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000).
+La app escuchara por defecto en todas las interfaces de red (`0.0.0.0:5000`).
 
-## Gameplay and persistence
+Para saber la IP local del ordenador anfitrion puedes usar:
 
-- Users must authenticate with Google before they can play.
-- Every finished run is saved in SQLite.
-- The best score is shown as soon as the user enters the session.
-- The sidebar also shows the most recent saved runs.
-- Controls: Left Arrow or `A`, Right Arrow or `D`, `Space`, and `R`.
+```powershell
+ipconfig
+```
+
+Busca la direccion IPv4 de tu adaptador activo y abre desde otro equipo de la misma red:
+
+```text
+http://TU_IP_LOCAL:5000
+```
+
+## Firewall de Windows
+
+Si otro equipo no puede entrar, permite el puerto `5000` en el Firewall de Windows o acepta la excepcion cuando Windows la solicite al arrancar Flask.
+
+## Juego y persistencia
+
+- Los usuarios deben autenticarse con Google antes de jugar.
+- Cada partida terminada se guarda en SQLite.
+- La puntuacion maxima aparece al iniciar sesion.
+- La barra lateral muestra las partidas recientes guardadas.
+- Controles: flechas izquierda y derecha o `A` y `D`, `Espacio` y `R`.

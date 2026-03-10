@@ -1,4 +1,4 @@
-const bootstrap = window.ARKANOID_BOOTSTRAP;
+﻿const bootstrap = window.ARKANOID_BOOTSTRAP;
 
 if (!bootstrap || !bootstrap.authenticated) {
     // La pantalla de acceso no necesita canvas.
@@ -412,3 +412,4 @@ if (!bootstrap || !bootstrap.authenticated) {
     resetGame();
     gameLoop();
 }
+
