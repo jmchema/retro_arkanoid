@@ -1,0 +1,21 @@
+﻿name: retro-arkanoid
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: retro-arkanoid-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5000
+      DATABASE_URL: sqlite:////app/instance/arkanoid.db
+    ports:
+      - "5000:5000"
+    volumes:
+      - arkanoid_instance:/app/instance
+
+volumes:
+  arkanoid_instance:
