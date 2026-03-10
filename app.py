@@ -77,6 +77,7 @@ def create_app() -> Flask:
     def load_current_user() -> None:
         user_id = session.get("user_id")
         g.current_user = db.session.get(User, user_id) if user_id else None
+        g.is_anonymous_guest = session.get("is_anonymous_guest", False)
 
     def google_enabled() -> bool:
         return "google" in oauth._registry
@@ -87,45 +88,67 @@ def create_app() -> Flask:
         return url_for("auth_google_callback", _external=True)
 
     def build_home_context():
-        user = g.current_user
-        if not user:
+        if g.current_user:
+            recent_games = (
+                GameSession.query.filter_by(user_id=g.current_user.id)
+                .order_by(GameSession.created_at.desc())
+                .limit(5)
+                .all()
+            )
+            total_games_count = GameSession.query.filter_by(user_id=g.current_user.id).count()
+            max_score = (
+                db.session.query(func.max(GameSession.score))
+                .filter(GameSession.user_id == g.current_user.id)
+                .scalar()
+            ) or 0
             return {
-                "authenticated": False,
+                "authenticated": True,
                 "google_enabled": google_enabled(),
+                "is_anonymous_guest": False,
+                "can_save_scores": True,
+                "user": g.current_user,
+                "max_score": max_score,
+                "total_games_count": total_games_count,
+                "recent_games": recent_games,
+                "recent_games_data": [
+                    {
+                        "score": game.score,
+                        "won": game.won,
+                        "created_at": game.created_at.strftime("%Y-%m-%d %H:%M"),
+                    }
+                    for game in recent_games
+                ],
             }
 
-        recent_games = (
-            GameSession.query.filter_by(user_id=user.id)
-            .order_by(GameSession.created_at.desc())
-            .limit(5)
-            .all()
-        )
-        total_games_count = GameSession.query.filter_by(user_id=user.id).count()
-        max_score = (
-            db.session.query(func.max(GameSession.score))
-            .filter(GameSession.user_id == user.id)
-            .scalar()
-        ) or 0
+        if g.is_anonymous_guest:
+            return {
+                "authenticated": True,
+                "google_enabled": google_enabled(),
+                "is_anonymous_guest": True,
+                "can_save_scores": False,
+                "user": None,
+                "max_score": 0,
+                "total_games_count": 0,
+                "recent_games": [],
+                "recent_games_data": [],
+            }
+
         return {
-            "authenticated": True,
+            "authenticated": False,
             "google_enabled": google_enabled(),
-            "user": user,
-            "max_score": max_score,
-            "total_games_count": total_games_count,
-            "recent_games": recent_games,
-            "recent_games_data": [
-                {
-                    "score": game.score,
-                    "won": game.won,
-                    "created_at": game.created_at.strftime("%Y-%m-%d %H:%M"),
-                }
-                for game in recent_games
-            ],
+            "is_anonymous_guest": False,
+            "can_save_scores": False,
         }
 
     @app.get("/")
     def index():
         return render_template("index.html", **build_home_context())
+
+    @app.get("/login/anonymous")
+    def login_anonymous():
+        session.clear()
+        session["is_anonymous_guest"] = True
+        return redirect(url_for("index"))
 
     @app.get("/login/google")
     def login_google():
@@ -189,6 +212,9 @@ def create_app() -> Flask:
 
     @app.post("/api/games")
     def save_game():
+        if g.is_anonymous_guest:
+            return jsonify({"error": "guest_mode_no_persistence"}), 200
+
         if not g.current_user:
             return jsonify({"error": "authentication_required"}), 401
 

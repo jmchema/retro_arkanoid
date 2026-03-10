@@ -24,6 +24,8 @@ if (!bootstrap || !bootstrap.authenticated) {
         score: 0,
         lives: 3,
         scoreSaved: false,
+        isAnonymousGuest: Boolean(bootstrap.isAnonymousGuest),
+        canSaveScores: Boolean(bootstrap.canSaveScores),
         maxScore: bootstrap.maxScore || 0,
         totalGamesCount: bootstrap.totalGamesCount || 0,
         keys: {
@@ -92,8 +94,10 @@ if (!bootstrap || !bootstrap.authenticated) {
     function updateHud() {
         scoreElement.textContent = String(state.score);
         livesElement.textContent = String(state.lives);
-        maxScoreElement.textContent = String(state.maxScore);
-        savedRunsCountElement.textContent = String(state.totalGamesCount);
+        if (state.canSaveScores) {
+            maxScoreElement.textContent = String(state.maxScore);
+            savedRunsCountElement.textContent = String(state.totalGamesCount);
+        }
     }
 
     function showOverlay(title, message, kicker = "Pausa") {
@@ -236,7 +240,7 @@ if (!bootstrap || !bootstrap.authenticated) {
     }
 
     async function persistScore(won) {
-        if (state.scoreSaved) {
+        if (state.scoreSaved || !state.canSaveScores) {
             return;
         }
 
@@ -258,6 +262,9 @@ if (!bootstrap || !bootstrap.authenticated) {
             }
 
             const payload = await response.json();
+            if (payload.error) {
+                return;
+            }
             state.maxScore = payload.max_score;
             state.totalGamesCount = payload.total_games_count;
             updateHud();
@@ -287,7 +294,10 @@ if (!bootstrap || !bootstrap.authenticated) {
     function handleWin() {
         state.running = false;
         state.won = true;
-        showOverlay("Has ganado", `Puntuacion final: ${state.score}. Pulsa R o usa el boton para volver a jugar.`, "Victoria");
+        const message = state.isAnonymousGuest
+            ? `Puntuacion final: ${state.score}. Estas jugando como invitado, asi que esta partida no se guardara.`
+            : `Puntuacion final: ${state.score}. Pulsa R o usa el boton para volver a jugar.`;
+        showOverlay("Has ganado", message, "Victoria");
         persistScore(true);
     }
 
@@ -309,7 +319,10 @@ if (!bootstrap || !bootstrap.authenticated) {
 
         if (state.lives <= 0) {
             state.running = false;
-            showOverlay("Fin de la partida", `Has conseguido ${state.score} puntos. Pulsa R para intentarlo de nuevo.`, "Derrota");
+            const message = state.isAnonymousGuest
+                ? `Has conseguido ${state.score} puntos. Pulsa R para volver a jugar como invitado.`
+                : `Has conseguido ${state.score} puntos. Pulsa R para intentarlo de nuevo.`;
+            showOverlay("Fin de la partida", message, "Derrota");
             persistScore(false);
             return;
         }
@@ -412,4 +425,3 @@ if (!bootstrap || !bootstrap.authenticated) {
     resetGame();
     gameLoop();
 }
-
