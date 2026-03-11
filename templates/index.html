@@ -1,12 +1,23 @@
 ﻿<!DOCTYPE html>
-<html lang="es">
+<html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Arkanoid</title>
+    <title>{{ t('app_title') }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+    <div class="language-switcher" aria-label="{{ t('language_label') }}">
+        {% for language in languages %}
+            <a
+                class="language-link {% if current_lang == language %}active{% endif %}"
+                href="{{ url_for('set_language', code=language, next=request.full_path if request.query_string else request.path) }}"
+            >
+                {{ t('lang_' ~ language) }}
+            </a>
+        {% endfor %}
+    </div>
+
     {% with flashes = get_flashed_messages(with_categories=true) %}
         {% if flashes %}
             <div class="flash-stack" role="status" aria-live="polite">
@@ -20,22 +31,16 @@
     {% if not authenticated %}
         <main class="auth-shell">
             <section class="auth-card">
-                <p class="eyebrow">Arkanoid Online</p>
-                <h1>Elige como quieres jugar</h1>
-                <p class="auth-copy">
-                    Puedes entrar con Google para guardar tu historial y tu puntuacion maxima,
-                    o jugar como invitado sin guardar tus partidas.
-                </p>
+                <p class="eyebrow">{{ t('app_badge') }}</p>
+                <h1>{{ t('auth_title') }}</h1>
+                <p class="auth-copy">{{ t('auth_copy') }}</p>
                 <div class="auth-actions">
                     {% if google_enabled %}
-                        <a class="google-button" href="{{ url_for('login_google') }}">Continuar con Google</a>
+                        <a class="google-button" href="{{ url_for('login_google') }}">{{ t('continue_google') }}</a>
                     {% else %}
-                        <p class="auth-warning">
-                            La autenticacion con Google todavia no esta configurada. Añade las variables de entorno de
-                            <code>.env.example</code> para activar el acceso.
-                        </p>
+                        <p class="auth-warning">{{ t('google_not_configured_help') }}</p>
                     {% endif %}
-                    <a class="guest-button" href="{{ url_for('login_anonymous') }}">Jugar como invitado</a>
+                    <a class="guest-button" href="{{ url_for('login_anonymous') }}">{{ t('play_guest') }}</a>
                 </div>
             </section>
         </main>
@@ -47,43 +52,43 @@
                         <div class="profile-head profile-head-guest">
                             <div class="avatar avatar-fallback">?</div>
                             <div>
-                                <p class="eyebrow">Modo de acceso</p>
-                                <h2>Invitado</h2>
-                                <p class="profile-email">Tus partidas no se guardan en este modo.</p>
+                                <p class="eyebrow">{{ t('guest_access_mode') }}</p>
+                                <h2>{{ t('guest_user') }}</h2>
+                                <p class="profile-email">{{ t('guest_description') }}</p>
                             </div>
                         </div>
 
                         <div class="stats-grid">
                             <article class="stat-card">
-                                <p class="hud-label">Puntuacion maxima</p>
+                                <p class="hud-label">{{ t('best_score') }}</p>
                                 <p class="hud-value" id="maxScore">-</p>
                             </article>
                             <article class="stat-card">
-                                <p class="hud-label">Partidas guardadas</p>
+                                <p class="hud-label">{{ t('saved_runs') }}</p>
                                 <p class="hud-value" id="savedRunsCount">-</p>
                             </article>
                         </div>
 
                         <section class="history-panel">
                             <div class="history-header">
-                                <h3>Modo invitado</h3>
+                                <h3>{{ t('guest_mode_title') }}</h3>
                                 <form action="{{ url_for('logout') }}" method="post">
-                                    <button class="ghost-button" type="submit">Salir</button>
+                                    <button class="ghost-button" type="submit">{{ t('exit') }}</button>
                                 </form>
                             </div>
                             <ul id="historyList" class="history-list">
-                                <li class="history-empty">Puedes jugar libremente, pero el historial y los records solo se guardan si entras con Google.</li>
+                                <li class="history-empty">{{ t('guest_mode_history') }}</li>
                             </ul>
                         </section>
                     {% else %}
                         <div class="profile-head">
                             {% if user.avatar_url %}
-                                <img class="avatar" src="{{ user.avatar_url }}" alt="Avatar de {{ user.display_name }}">
+                                <img class="avatar" src="{{ user.avatar_url }}" alt="{{ user.display_name }} avatar">
                             {% else %}
                                 <div class="avatar avatar-fallback">{{ user.display_name[:1] }}</div>
                             {% endif %}
                             <div>
-                                <p class="eyebrow">Sesion iniciada como</p>
+                                <p class="eyebrow">{{ t('logged_in_as') }}</p>
                                 <h2>{{ user.display_name }}</h2>
                                 <p class="profile-email">{{ user.email }}</p>
                             </div>
@@ -91,20 +96,20 @@
 
                         <div class="stats-grid">
                             <article class="stat-card">
-                                <p class="hud-label">Puntuacion maxima</p>
+                                <p class="hud-label">{{ t('best_score') }}</p>
                                 <p class="hud-value" id="maxScore">{{ max_score }}</p>
                             </article>
                             <article class="stat-card">
-                                <p class="hud-label">Partidas guardadas</p>
+                                <p class="hud-label">{{ t('saved_runs') }}</p>
                                 <p class="hud-value" id="savedRunsCount">{{ total_games_count }}</p>
                             </article>
                         </div>
 
                         <section class="history-panel">
                             <div class="history-header">
-                                <h3>Ultimas partidas</h3>
+                                <h3>{{ t('recent_runs') }}</h3>
                                 <form action="{{ url_for('logout') }}" method="post">
-                                    <button class="ghost-button" type="submit">Cerrar sesion</button>
+                                    <button class="ghost-button" type="submit">{{ t('logout') }}</button>
                                 </form>
                             </div>
                             <ul id="historyList" class="history-list">
@@ -112,10 +117,10 @@
                                     <li>
                                         <span>{{ game.created_at.strftime("%Y-%m-%d %H:%M") }}</span>
                                         <strong>{{ game.score }}</strong>
-                                        <em>{{ "Victoria" if game.won else "Derrota" }}</em>
+                                        <em>{{ t('victory') if game.won else t('defeat') }}</em>
                                     </li>
                                 {% else %}
-                                    <li class="history-empty">Todavia no hay partidas guardadas. Termina una para crear tu historial.</li>
+                                    <li class="history-empty">{{ t('no_saved_runs') }}</li>
                                 {% endfor %}
                             </ul>
                         </section>
@@ -125,36 +130,36 @@
                 <section class="game-card" aria-labelledby="game-title">
                     <header class="hud">
                         <div>
-                            <p class="hud-label">Puntuacion</p>
+                            <p class="hud-label">{{ t('score') }}</p>
                             <p class="hud-value" id="score">0</p>
                         </div>
                         <div class="hud-center">
-                            <h1 id="game-title">Retro Arkanoid</h1>
+                            <h1 id="game-title">{{ t('app_title') }}</h1>
                             {% if is_anonymous_guest %}
-                                <p class="hud-subtitle">Estas jugando como invitado. Tus partidas no se guardaran.</p>
+                                <p class="hud-subtitle">{{ t('guest_subtitle') }}</p>
                             {% else %}
-                                <p class="hud-subtitle">Rompe todos los bloques. Cada partida completada se guarda en tu cuenta.</p>
+                                <p class="hud-subtitle">{{ t('authenticated_subtitle') }}</p>
                             {% endif %}
                         </div>
                         <div>
-                            <p class="hud-label">Vidas</p>
+                            <p class="hud-label">{{ t('lives') }}</p>
                             <p class="hud-value" id="lives">3</p>
                         </div>
                     </header>
 
                     <section class="stage-wrap">
-                        <canvas id="gameCanvas" width="900" height="600" aria-label="Zona de juego de Arkanoid"></canvas>
+                        <canvas id="gameCanvas" width="900" height="600" aria-label="{{ t('game_area_label') }}"></canvas>
                         <div class="overlay" id="overlay">
-                            <p class="overlay-kicker">Listo</p>
-                            <h2 id="overlayTitle">Pulsa Espacio para empezar</h2>
-                            <p id="overlayMessage">Usa las flechas izquierda y derecha para mover la barra.</p>
-                            <button id="restartButton" type="button">Empezar partida</button>
+                            <p class="overlay-kicker">{{ t('ready') }}</p>
+                            <h2 id="overlayTitle">{{ t('start_prompt') }}</h2>
+                            <p id="overlayMessage">{{ t('move_prompt') }}</p>
+                            <button id="restartButton" type="button">{{ t('start_game') }}</button>
                         </div>
                     </section>
 
                     <footer class="controls">
-                        <p>Controles: <span>Flechas izquierda y derecha</span> o <span>A / D</span></p>
-                        <p>Reinicia cuando quieras con <span>R</span></p>
+                        <p>{{ t('controls_label') }} <span>{{ t('controls_move') }}</span> or <span>A / D</span></p>
+                        <p>{{ t('controls_restart') }} <span>R</span></p>
                     </footer>
                 </section>
             </section>
@@ -168,7 +173,9 @@
                 "maxScore": max_score,
                 "totalGamesCount": total_games_count,
                 "recentGames": recent_games_data,
-                "saveGameUrl": url_for("save_game")
+                "saveGameUrl": url_for("save_game"),
+                "language": current_lang,
+                "translations": game_translations
             } | tojson }};
         </script>
         <script src="{{ url_for('static', filename='js/game.js') }}"></script>

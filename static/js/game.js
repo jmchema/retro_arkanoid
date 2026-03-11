@@ -1,8 +1,9 @@
 ﻿const bootstrap = window.ARKANOID_BOOTSTRAP;
 
 if (!bootstrap || !bootstrap.authenticated) {
-    // La pantalla de acceso no necesita canvas.
+    // The login screen has no game canvas.
 } else {
+    const messages = bootstrap.translations || {};
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
@@ -62,6 +63,14 @@ if (!bootstrap || !bootstrap.authenticated) {
 
     let bricks = [];
 
+    function formatText(key, replacements = {}) {
+        let text = messages[key] || key;
+        Object.entries(replacements).forEach(([name, value]) => {
+            text = text.replace(`{${name}}`, String(value));
+        });
+        return text;
+    }
+
     function buildBricks() {
         const palette = ["#ff6b6b", "#ffd93d", "#6bff95", "#6ef2ff", "#a991ff", "#ff7be5"];
         const totalWidth =
@@ -100,11 +109,11 @@ if (!bootstrap || !bootstrap.authenticated) {
         }
     }
 
-    function showOverlay(title, message, kicker = "Pausa") {
+    function showOverlay(title, message, kicker = formatText("pause")) {
         overlayTitle.textContent = title;
         overlayMessage.textContent = message;
         overlayKicker.textContent = kicker;
-        restartButton.textContent = state.started ? "Jugar otra vez" : "Empezar partida";
+        restartButton.textContent = state.started ? formatText("play_again") : formatText("start_game");
         overlay.classList.remove("hidden");
     }
 
@@ -169,7 +178,7 @@ if (!bootstrap || !bootstrap.authenticated) {
         ctx.fillStyle = "rgba(255,255,255,0.16)";
         ctx.font = "bold 16px Consolas";
         ctx.textAlign = "center";
-        ctx.fillText("PULSA ESPACIO PARA LANZAR", canvas.width / 2, canvas.height - 110);
+        ctx.fillText(formatText("space_to_launch"), canvas.width / 2, canvas.height - 110);
     }
 
     function draw() {
@@ -270,7 +279,7 @@ if (!bootstrap || !bootstrap.authenticated) {
             updateHud();
             prependHistoryItem(payload);
         } catch (error) {
-            console.error("No se ha podido guardar la partida", error);
+            console.error(formatText("save_game_error"), error);
         }
     }
 
@@ -281,7 +290,7 @@ if (!bootstrap || !bootstrap.authenticated) {
         }
 
         const item = document.createElement("li");
-        const outcome = payload.won ? "Victoria" : "Derrota";
+        const outcome = payload.won ? formatText("victory") : formatText("defeat");
         item.innerHTML = `<span>${payload.created_at}</span><strong>${payload.score}</strong><em>${outcome}</em>`;
         historyList.prepend(item);
 
@@ -295,9 +304,9 @@ if (!bootstrap || !bootstrap.authenticated) {
         state.running = false;
         state.won = true;
         const message = state.isAnonymousGuest
-            ? `Puntuacion final: ${state.score}. Estas jugando como invitado, asi que esta partida no se guardara.`
-            : `Puntuacion final: ${state.score}. Pulsa R o usa el boton para volver a jugar.`;
-        showOverlay("Has ganado", message, "Victoria");
+            ? formatText("win_message_guest", { score: state.score })
+            : formatText("win_message", { score: state.score });
+        showOverlay(formatText("you_win"), message, formatText("victory"));
         persistScore(true);
     }
 
@@ -320,16 +329,20 @@ if (!bootstrap || !bootstrap.authenticated) {
         if (state.lives <= 0) {
             state.running = false;
             const message = state.isAnonymousGuest
-                ? `Has conseguido ${state.score} puntos. Pulsa R para volver a jugar como invitado.`
-                : `Has conseguido ${state.score} puntos. Pulsa R para intentarlo de nuevo.`;
-            showOverlay("Fin de la partida", message, "Derrota");
+                ? formatText("game_over_message_guest", { score: state.score })
+                : formatText("game_over_message", { score: state.score });
+            showOverlay(formatText("game_over"), message, formatText("defeat"));
             persistScore(false);
             return;
         }
 
         state.running = false;
         resetBallAndPaddle();
-        showOverlay("Has perdido la bola", `Todavia te quedan ${state.lives} vidas. Pulsa Espacio para continuar.`, "Reintento");
+        showOverlay(
+            formatText("ball_lost"),
+            formatText("ball_lost_message", { lives: state.lives }),
+            formatText("retry")
+        );
     }
 
     function updateBall() {
@@ -365,11 +378,7 @@ if (!bootstrap || !bootstrap.authenticated) {
         buildBricks();
         resetBallAndPaddle();
         updateHud();
-        showOverlay(
-            "Pulsa Espacio para empezar",
-            "Usa las flechas izquierda y derecha para mover la barra.",
-            "Listo"
-        );
+        showOverlay(formatText("start_prompt"), formatText("move_prompt"), formatText("ready"));
         draw();
     }
 
